@@ -10,8 +10,6 @@ class FirebaseJson {
 private:
 	const char*Server, *Auth, *uri;
 public:
-
-
 	FirebaseJson(const char* server, const char* auth)
 	{
 		Server = server;
@@ -26,22 +24,29 @@ public:
 		return k;
 	}
 
-	void SetJson(String key, String val) {
-		String n = "\"";
-		String ptr = "{" + n + key + n + ":" + n + val + n + "}";
+	Json AddJson(Json json1, Json json2) {
+		String ptr = json1 + json2;
 		json = ptr;
+		json.replace("}{", ",");
+		return json;
 	}
-	void SetJson(String key, int val) {
+	Json SetJson(String key, String val) {
 		String n = "\"";
-		String ptr = "{" + n + key + n + ":" + n + String(val) + n + "}";
+
+		String ptr = "{" + n + key + n + ":" + val + "}";
+		ptr.replace("\"\"", "\"");
 		json = ptr;
+		return json;
 	}
-	void SetJson(String key, double val) {
-		String n = "\"";
-		String ptr = "{" + n + key + n + ":" + n + String(val) + n + "}";
-		json = ptr;
+	Json SetJson(String key, int val) {
+		json = SetJson(key, String(val));
+		return json;
 	}
-	void Send(const char* method, const char* uri) {
+	Json SetJson(String key, double val) {
+		json = SetJson(key, String(val));
+		return json;
+	}
+	void SendJson(const char* method, const char* uri, Json json) {
 		client.print(String(method) + " " + String(uri) + ".json HTTP/1.1\n");
 		client.print("HOST: " + String(Server) + "\n");
 		client.print("Connection: close\n");
@@ -50,7 +55,7 @@ public:
 		client.print("Content-Length: " + String(json.length()) + "\n\n");
 		client.println(json + "\n\n");
 	}
-	void Send(const char* uri) {
-		Send("GET", uri);
+	void SendJson(const char* uri, Json json) {
+		SendJson("GET", uri, json);
 	}
 };
