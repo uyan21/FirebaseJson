@@ -15,6 +15,11 @@ public:
 		Server = server;
 		Auth = auth;
 	}
+	FirebaseJson(const char* server)
+	{
+		Server = server;
+		Auth = NULL;
+	}
 	int ReadytoSend() {
 		int k = client.connect(Server, PORT);
 		if (!k) {
@@ -47,15 +52,45 @@ public:
 		return json;
 	}
 	void SendJson(const char* method, const char* uri, Json json) {
-		client.print(String(method) + " " + String(uri) + ".json HTTP/1.1\n");
-		client.print("HOST: " + String(Server) + "\n");
-		client.print("Connection: close\n");
-		client.print("Authorization: " + String(Auth) + "\n");
-		client.print("Content-Type: application/json; UTF-8\n");
-		client.print("Content-Length: " + String(json.length()) + "\n\n");
-		client.println(json + "\n\n");
+		if (Auth != NULL) {
+			client.print(String(method) + " " + String(uri) + ".json HTTP/1.1\n");
+			client.print("HOST: " + String(Server) + "\n");
+			client.print("Connection: close\n");
+			client.print("Authorization: " + String(Auth) + "\n");
+			client.print("Content-Type: application/json; UTF-8\n");
+			client.print("Content-Length: " + String(json.length()) + "\n\n");
+			client.println(json + "\n\n");
+		}
+		else {
+			client.print(String(method) + " " + String(uri) + ".json HTTP/1.1\n");
+			client.print("HOST: " + String(Server) + "\n");
+			client.print("Connection: close\n");
+			client.print("Content-Type: application/json; UTF-8\n");
+			client.print("Content-Length: " + String(json.length()) + "\n\n");
+			client.println(json + "\n\n");
+		}
+
 	}
 	void SendJson(const char* uri, Json json) {
 		SendJson("GET", uri, json);
+	}
+	Json RecvJson(const char* uri) {
+		client.print("GET " + String(uri) + ".json HTTP/1.1\n");
+		client.print("HOST: " + String(Server) + "\n");
+		client.print("Connection: close\n");
+		delay(400);
+		char c;
+		bool toggle = false;
+		Json rjson = "";
+		while (client.available()) {
+			c = client.read();
+			if (c == '{' || c == '}') {
+				toggle = true ? false : true;
+			}
+			if (toggle) {
+				rjson += c;
+			}
+
+		}
 	}
 };
